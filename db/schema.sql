@@ -35,28 +35,28 @@ CREATE TABLE IF NOT EXISTS baskets (
 
 CREATE TABLE IF NOT EXISTS transactions (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-
+ 
     client_id INTEGER NOT NULL,
     admin_id INTEGER,
-
+ 
     amount REAL NOT NULL,
-
+ 
     status TEXT NOT NULL DEFAULT 'Pending'
         CHECK(status IN ('Pending','Approved','Rejected')),
-
+ 
     screenshot_path TEXT,
-
+ 
     note TEXT,
-
+ 
     approved_at DATETIME,
-
+ 
     created_at DATETIME DEFAULT (datetime('now')),
     updated_at DATETIME DEFAULT (datetime('now')),
-
+ 
     FOREIGN KEY(client_id) REFERENCES users(id) ON DELETE CASCADE,
     FOREIGN KEY(admin_id) REFERENCES users(id) ON DELETE SET NULL
 );
-CREATE TABlE IF NOT EXISTS orders (
+CREATE TABLE IF NOT EXISTS orders (
 id INTEGER PRIMARY KEY AUTOINCREMENT,
 client_id INTEGER NOT NULL,
 status TEXT NOT NULL CHECK(status IN ('Pending', 'Completed', 'Cancelled')),
@@ -117,3 +117,14 @@ CREATE TABLE IF NOT EXISTS pricing (
     UNIQUE (material, activity_type)
 );
 
+CREATE TABLE IF NOT EXISTS notifications (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    recipient_id INTEGER NOT NULL,
+    recipient_type TEXT NOT NULL CHECK(recipient_type IN ('Admin', 'Client')),
+    message TEXT NOT NULL,
+    is_read BOOLEAN NOT NULL DEFAULT 0,
+    created_at DATETIME DEFAULT (datetime('now')),
+    FOREIGN KEY (recipient_id) REFERENCES users(id) ON DELETE CASCADE
+);
+CREATE INDEX IF NOT EXISTS idx_notifications_recipient ON notifications(recipient_id, recipient_type);
+CREATE INDEX IF NOT EXISTS idx_notifications_unread ON notifications(recipient_id, recipient_type, is_read) WHERE is_read = 0;

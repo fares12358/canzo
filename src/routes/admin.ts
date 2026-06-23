@@ -180,5 +180,16 @@ return c.json({chart:daysSoldPerDay,materialsWeightSoldThisWeek:materialsWeightS
         console.error(`error while getting stats ${error}`)
         return c.json({error:"Internal server error"},500)
     }
+}).get("/notifications", async (c) => {
+    try {
+        const { userId, user_role } = c.get("jwtPayload") as TokenPayload;
+        const notifications = await c.env.canzo.prepare(
+            "SELECT id, message, is_read, created_at FROM notifications WHERE recipient_id = ?1 AND recipient_type = ?2 ORDER BY created_at DESC"
+        ).bind(userId, user_role).all();
+        return c.json({ notifications: notifications.results });
+    } catch (error) {
+        console.error(`error while getting notifications ${error}`)
+        return c.json({ error: "Internal server error" }, 500)
+    }
 })
 export default adminRouter

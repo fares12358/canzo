@@ -143,6 +143,15 @@ export async function createWithdrawalRequest(
         throw new WalletServiceError('WALLET_LOCK_FAILED', 'Failed to create withdrawal')
     }
 
+    // Create notifications for all admin users
+    await db
+        .prepare(
+            `INSERT INTO notifications (recipient_id, recipient_type, message)
+             SELECT id, 'Admin', ?1 FROM users WHERE user_role = 'Admin'`
+        )
+        .bind(`New withdrawal request from user ${userId} for amount ${amount}`)
+        .run()
+
     return Number(withdrawalId)
 }
 
@@ -175,7 +184,7 @@ export async function approveWithdrawal(
                      admin_id = ?1,
                      screenshot_path = ?2,
                      updated_at = datetime('now')
-                 WHERE id = ?3 AND status = 'Pending'`
+                 WHERE id = ?3 AND status = 'Pending'`  
             )
             .bind(adminId, screenshotPath, withdrawalId),
         db
@@ -206,7 +215,17 @@ export async function approveWithdrawal(
     if (results[1].meta.changes === 0) {
         throw new WalletServiceError('WALLET_RELEASE_FAILED', 'Failed to finalize withdrawal')
     }
+
+    // Create notification for the user
+    await db
+        .prepare(
+            `INSERT INTO notifications (recipient_id, recipient_type, message)
+             VALUES (?1, 'Client', ?2)`
+        )
+        .bind(withdrawal.user_id, `Your withdrawal request #${withdrawalId} has been approved`)
+        .run()
 }
+
 
 export async function rejectWithdrawal(
     db: D1Database,
