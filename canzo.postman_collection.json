@@ -1,0 +1,507 @@
+{
+  "info": {
+    "_postman_id": "canzo-api-collection",
+    "name": "Canzo API",
+    "description": "Canzo backend — Cloudflare Workers + Hono.\n\nVariables:\n- `baseUrl` — default http://localhost:8787\n- `clientToken` — set automatically after Client Login\n- `adminToken` — set automatically after Admin Login\n\nProtected routes: `Authorization: Bearer <token>`",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:8787" },
+    { "key": "clientToken", "value": "" },
+    { "key": "adminToken", "value": "" },
+    { "key": "basketId", "value": "1" },
+    { "key": "orderId", "value": "1" },
+    { "key": "withdrawalId", "value": "1" },
+    { "key": "imageKey", "value": "example.jpg" },
+    { "key": "resetToken", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "Auth (Public)",
+      "item": [
+        {
+          "name": "Client Signup",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"testclient\",\n  \"password\": \"Password1\",\n  \"confirmPassword\": \"Password1\",\n  \"email\": \"client@example.com\",\n  \"phoneNumber\": \"01012345678\",\n  \"address\": \"123 Main Street Cairo Egypt\",\n  \"activityType\": \"Cafe\",\n  \"activityName\": \"Test Cafe\"\n}"
+            },
+            "url": "{{baseUrl}}/auth/client/signup",
+            "description": "Register Client. activityType: Wedding hall | Restaurant | Cafe | Club"
+          }
+        },
+        {
+          "name": "Login (Client)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "  const j = pm.response.json();",
+                  "  if (j.token) pm.collectionVariables.set('clientToken', j.token);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"identifier\": \"client@example.com\",\n  \"password\": \"Password1\"\n}"
+            },
+            "url": "{{baseUrl}}/auth/login",
+            "description": "identifier = email OR phone. Saves token to clientToken."
+          }
+        },
+        {
+          "name": "Login (Admin)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "  const j = pm.response.json();",
+                  "  if (j.token) pm.collectionVariables.set('adminToken', j.token);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"identifier\": \"admin@example.com\",\n  \"password\": \"Password1\"\n}"
+            },
+            "url": "{{baseUrl}}/auth/login",
+            "description": "Use admin credentials. Saves token to adminToken."
+          }
+        },
+        {
+          "name": "Forgot Password",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"client@example.com\"\n}"
+            },
+            "url": "{{baseUrl}}/auth/forgot-password"
+          }
+        },
+        {
+          "name": "Verify OTP",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "  const j = pm.response.json();",
+                  "  if (j.resetToken) pm.collectionVariables.set('resetToken', j.resetToken);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"client@example.com\",\n  \"otp\": \"123456\"\n}"
+            },
+            "url": "{{baseUrl}}/auth/verify-otp",
+            "description": "otp = 6 digits. Saves resetToken."
+          }
+        },
+        {
+          "name": "Reset Password",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"client@example.com\",\n  \"password\": \"Password2\",\n  \"confirmPassword\": \"Password2\",\n  \"resetToken\": \"{{resetToken}}\"\n}"
+            },
+            "url": "{{baseUrl}}/auth/reset-password"
+          }
+        },
+        {
+          "name": "Google Login",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"idToken\": \"<GOOGLE_ID_TOKEN>\"\n}"
+            },
+            "url": "{{baseUrl}}/auth/google"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Google",
+      "item": [
+        {
+          "name": "Setup Profile",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{clientToken}}", "type": "string" }]
+            },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"address\": \"123 Main Street Cairo Egypt\",\n  \"activityType\": \"Cafe\",\n  \"activityName\": \"My Cafe\"\n}"
+            },
+            "url": "{{baseUrl}}/api/setup-profile",
+            "description": "JWT required. After Google sign-in."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Client",
+      "auth": {
+        "type": "bearer",
+        "bearer": [{ "key": "token", "value": "{{clientToken}}", "type": "string" }]
+      },
+      "item": [
+        {
+          "name": "Add Baskets",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "[\n  {\n    \"content_type\": \"Plastic\",\n    \"content_weight\": 5,\n    \"amount\": 2\n  },\n  {\n    \"content_type\": \"Canz\",\n    \"content_weight\": 3,\n    \"amount\": 1\n  }\n]"
+            },
+            "url": "{{baseUrl}}/api/client/baskets",
+            "description": "Array body. content_type: Plastic | Canz. content_weight: 0-15. amount: count of baskets."
+          }
+        },
+        {
+          "name": "Fill Basket",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": "{{baseUrl}}/api/client/baskets/{{basketId}}/fill",
+            "description": "Path param id = basket id. No body."
+          }
+        },
+        {
+          "name": "Get Baskets",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/client/baskets"
+          }
+        },
+        {
+          "name": "Orders Count",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/client/orders/count"
+          }
+        },
+        {
+          "name": "Get Orders by Status",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/client/orders/Pending",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "client", "orders", "Pending"]
+            },
+            "description": "status: Pending | Completed | Cancelled"
+          }
+        },
+        {
+          "name": "Get Orders - Completed",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/client/orders/Completed"
+          }
+        },
+        {
+          "name": "Get Orders - Cancelled",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/client/orders/Cancelled"
+          }
+        },
+        {
+          "name": "Get Transactions",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/client/transactions"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Client Wallet",
+      "auth": {
+        "type": "bearer",
+        "bearer": [{ "key": "token", "value": "{{clientToken}}", "type": "string" }]
+      },
+      "item": [
+        {
+          "name": "Request Withdraw",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": 100,\n  \"wallet_number\": \"01234567890\",\n  \"wallet_type\": \"Vodafone Cash\"\n}"
+            },
+            "url": "{{baseUrl}}/api/client/withdraw",
+            "description": "wallet_type: Vodafone Cash | Orange Cash | Etisalat Cash | InstaPay"
+          }
+        },
+        {
+          "name": "Get Withdrawals",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/client/withdrawals",
+            "description": "Returns withdrawals + wallet (balance, pending_balance, total)."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Client Profile",
+      "auth": {
+        "type": "bearer",
+        "bearer": [{ "key": "token", "value": "{{clientToken}}", "type": "string" }]
+      },
+      "item": [
+        {
+          "name": "Get Profile",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/client/profile"
+          }
+        },
+        {
+          "name": "Update Profile",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"newname\",\n  \"email\": \"newclient@example.com\",\n  \"phoneNumber\": \"01098765432\",\n  \"address\": \"456 Updated Street Cairo\",\n  \"activityType\": \"Restaurant\",\n  \"activityName\": \"Updated Name\"\n}"
+            },
+            "url": "{{baseUrl}}/api/client/profile",
+            "description": "All fields optional. Send at least one."
+          }
+        },
+        {
+          "name": "Change Password",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"oldPassword\": \"Password1\",\n  \"newPassword\": \"Password2\",\n  \"confirmPassword\": \"Password2\"\n}"
+            },
+            "url": "{{baseUrl}}/api/client/password"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Admin",
+      "auth": {
+        "type": "bearer",
+        "bearer": [{ "key": "token", "value": "{{adminToken}}", "type": "string" }]
+      },
+      "item": [
+        {
+          "name": "Get All Orders",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/admin/orders"
+          }
+        },
+        {
+          "name": "Get Pending Orders",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/orders?status=Pending",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "orders"],
+              "query": [{ "key": "status", "value": "Pending" }]
+            },
+            "description": "Only Pending filter is allowed."
+          }
+        },
+        {
+          "name": "Complete Order",
+          "request": {
+            "method": "PATCH",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "status", "value": "Completed", "type": "text" },
+                { "key": "image", "type": "file", "src": [], "description": "jpeg/png/webp max 2MB — required" }
+              ]
+            },
+            "url": "{{baseUrl}}/api/admin/order/{{orderId}}",
+            "description": "multipart/form-data. Credits client wallet."
+          }
+        },
+        {
+          "name": "Cancel Order",
+          "request": {
+            "method": "PATCH",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "status", "value": "Cancelled", "type": "text" }
+              ]
+            },
+            "url": "{{baseUrl}}/api/admin/order/{{orderId}}"
+          }
+        },
+        {
+          "name": "Analytics",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/admin/analytics"
+          }
+        },
+        {
+          "name": "Transactions",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/admin/transactions"
+          }
+        },
+        {
+          "name": "Client List",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/admin/client-list"
+          }
+        },
+        {
+          "name": "Stats",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/admin/stats"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Admin Wallet",
+      "auth": {
+        "type": "bearer",
+        "bearer": [{ "key": "token", "value": "{{adminToken}}", "type": "string" }]
+      },
+      "item": [
+        {
+          "name": "Get All Withdrawals",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/admin/withdrawals"
+          }
+        },
+        {
+          "name": "Get Withdrawals - Pending",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/withdrawals?status=Pending",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "withdrawals"],
+              "query": [{ "key": "status", "value": "Pending" }]
+            },
+            "description": "status: Pending | Approved | Rejected"
+          }
+        },
+        {
+          "name": "Approve Withdrawal",
+          "request": {
+            "method": "PATCH",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "status", "value": "Approved", "type": "text" },
+                { "key": "screenshot", "type": "file", "src": [], "description": "optional proof image" }
+              ]
+            },
+            "url": "{{baseUrl}}/api/admin/withdraw/{{withdrawalId}}"
+          }
+        },
+        {
+          "name": "Reject Withdrawal",
+          "request": {
+            "method": "PATCH",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "status", "value": "Rejected", "type": "text" }
+              ]
+            },
+            "url": "{{baseUrl}}/api/admin/withdraw/{{withdrawalId}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Admin Profile",
+      "auth": {
+        "type": "bearer",
+        "bearer": [{ "key": "token", "value": "{{adminToken}}", "type": "string" }]
+      },
+      "item": [
+        {
+          "name": "Get Profile",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/admin/profile"
+          }
+        },
+        {
+          "name": "Update Profile",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"adminuser\"\n}"
+            },
+            "url": "{{baseUrl}}/api/admin/profile"
+          }
+        },
+        {
+          "name": "Change Password",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"oldPassword\": \"Password1\",\n  \"newPassword\": \"Password2\",\n  \"confirmPassword\": \"Password2\"\n}"
+            },
+            "url": "{{baseUrl}}/api/admin/password"
+          }
+        }
+      ]
+    }
+  ]
+}

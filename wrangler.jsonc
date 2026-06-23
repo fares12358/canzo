@@ -1,0 +1,33 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "canzo",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-05-08",
+
+  "compatibility_flags": [
+    "nodejs_compat"
+  ],
+
+  "d1_databases": [
+    {
+      "binding": "canzo",
+      "database_name": "canzo",
+      "database_id": "2b8c122f-2758-4c11-bbd5-60f08e220391",
+      "migrations_dir": "db/migrations"
+    }
+  ],
+
+  "kv_namespaces": [
+    {
+      "binding": "canzo_KV",
+      "id": "65e25e8a704b41cdab80953c95c10f62"
+    }
+  ],
+
+  "r2_buckets": [
+    {
+      "binding": "CANZO_R2",
+      "bucket_name": "canzo"
+    }
+  ]
+}
