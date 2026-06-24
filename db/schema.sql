@@ -14,7 +14,7 @@ CREATE TABLE IF NOT EXISTS users (
 CREATE TABLE IF NOT EXISTS clients (
     user_id INTEGER PRIMARY KEY,
     address TEXT NOT NULL,
-    activity_type TEXT NOT NULL CHECK(activity_type IN('Wedding hall','Cafe','Club','Restaurant')),
+    activity_type TEXT NOT NULL CHECK(length(trim(activity_type)) > 0),
     activity_name TEXT NOT NULL,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );

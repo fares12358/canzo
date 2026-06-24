@@ -70,10 +70,16 @@ clientRouter.post("/baskets",zValidator("json",arrayBasketsSchema,(result,c)=>{
     try{
  const {userId} = c.get("jwtPayload") as TokenPayload
   const unMappedBaskets = c.req.valid("json")
-  const user = await c.env.canzo.prepare("SELECT activity_type FROM clients WHERE user_id = ?1").bind(userId).first<Client>()
-  if(!user){
-     return c.json({error:"Client not found"},404)
-  }
+   const user = await c.env.canzo.prepare("SELECT activity_type FROM clients WHERE user_id = ?1").bind(userId).first<Client>()
+   if(!user){
+      return c.json({error:"Client not found"},404)
+   }
+
+// Check if user is requesting water (Canz) but is not a Wedding hall
+const hasWaterRequest = unMappedBaskets.some(b => b.content_type === 'Canz');
+if (hasWaterRequest && user.activity_type !== 'Wedding hall') {
+  return c.json({ available: false, message: "Soon" }, 200);
+}
  const baskets: { content_type: string; content_weight: number; price: number }[] = []
   for (const b of unMappedBaskets) {
     const pricePerKg = await c.env.canzo

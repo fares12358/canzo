@@ -41,19 +41,31 @@ const authRouter = new Hono<{Bindings:Bindings}>()
    }) 
     ,async(c)=>{
         try{
-    const {username,password,email,phoneNumber,address,activityType,activityName} =  c.req.valid("json")
+    const {username,password,email,phoneNumber,address,activityType,activityName,customBusinessType} =  c.req.valid("json")
     const hashedPassword = await bcrypt.hash(password, 10)
-const user = await c.env.canzo.prepare("SELECT user_name FROM users WHERE email = ?1 OR phone_number = ?2").bind(email,phoneNumber).first<User>()
+    const user = await c.env.canzo.prepare("SELECT user_name FROM users WHERE email = ?1 OR phone_number = ?2").bind(email,phoneNumber).first<User>()
     if(user){
         return c.json({error:"User already exists"},409)
     }
-await c.env.canzo.batch([
-    c.env.canzo
-.prepare(" INSERT INTO users (user_name, phone_number, email, password_hash, user_role) VALUES (?1, ?2, ?3, ?4, 'Client')")
-.bind(username,phoneNumber,email,hashedPassword),
- c.env.canzo.prepare("INSERT INTO clients (user_id, address, activity_type, activity_name) VALUES (last_insert_rowid(), ?1, ?2, ?3)").bind(address,activityType,activityName)
-    ])
-return c.json({message:"Client registered successfully"},201)
+    // Determine the actual activity type to store
+    let finalActivityType: string;
+    if (activityType === "Other") {
+      if (!customBusinessType || !customBusinessType.trim()) {
+        // This should not happen due to validation, but being safe
+        return c.json({error:"Custom business type is required when 'Other' is selected"}, 400);
+      }
+      finalActivityType = customBusinessType.trim();
+    } else {
+      // When not "Other", customBusinessType should be undefined (per validation)
+      finalActivityType = activityType;
+    }
+    await c.env.canzo.batch([
+        c.env.canzo
+        .prepare(" INSERT INTO users (user_name, phone_number, email, password_hash, user_role) VALUES (?1, ?2, ?3, ?4, 'Client')")
+        .bind(username,phoneNumber,email,hashedPassword),
+         c.env.canzo.prepare("INSERT INTO clients (user_id, address, activity_type, activity_name) VALUES (last_insert_rowid(), ?1, ?2, ?3)").bind(address,finalActivityType,activityName)
+        ])
+    return c.json({message:"Client registered successfully"},201)
 }catch(error){
     console.error(`error while registering client ${error}`)
     return c.json({error:"Internal server error"},500)

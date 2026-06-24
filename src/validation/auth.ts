@@ -14,14 +14,33 @@ const refinedBaseSchema = baseSchema.refine((data) => data.password === data.con
     message: "Passwords don't match",
 })
 const clientSignupSchema = refinedBaseSchema.extend({
-  address:z.string()
-    .min(1,"address is required")
-    .min(10, 'Address too short')
-    .max(255, 'Address too long'),
-    activityType: z.enum(["Wedding hall","Restaurant","Cafe","Club"],
-        {message:"activity type must be one of the following: Wedding hall, Restaurant, Cafe, Club"}),
-    activityName: z.string().max(50,"activity name is too long").min(1,"activity name is required"),
-})
+   address:z.string()
+     .min(1,"address is required")
+     .min(10, 'Address too short')
+     .max(255, 'Address too long'),
+     activityType: z.enum(["Wedding hall","Restaurant","Cafe","Club","Other"],
+         {message:"activity type must be one of the following: Wedding hall, Restaurant, Cafe, Club, Other"}),
+     activityName: z.string().max(50,"activity name is too long").min(1,"activity name is required"),
+     customBusinessType: z.string().max(255, "Custom business type too long").optional()
+ })
+ .refine((data) => {
+   if (data.activityType === "Other") {
+     return !!data.customBusinessType && data.customBusinessType.trim().length > 0;
+   }
+   return true;
+ }, {
+   message: "Custom business type is required when 'Other' is selected",
+   path: ["customBusinessType"]
+ })
+ .refine((data) => {
+   if (data.activityType !== "Other") {
+     return !data.customBusinessType;
+   }
+   return true;
+ }, {
+   message: "Custom business type should only be provided when 'Other' is selected",
+   path: ["customBusinessType"]
+ })
 const loginSchema = z.object({
     identifier: z.string().min(1,"identifier is required").max(300)  ,
     password: z.string().min(1,"password is required").max(72)
