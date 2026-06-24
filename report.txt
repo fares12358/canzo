@@ -1,0 +1,57 @@
+FINAL PROJECT VERIFICATION REPORT
+=================================
+
+1. ALL FILES CHANGED ACROSS ALL PHASES:
+   - db/schema.sql
+   - db/seed-pricing.sql
+   - src/services/wallet.ts
+   - src/routes/admin.ts
+   - src/routes/client.ts
+   - src/validation/auth.ts
+   - src/routes/auth.ts
+
+2. DATABASE CHANGES SUMMARY:
+   - Added notifications table (id, recipient_id, recipient_type, message, is_read, created_at)
+   - Added indexes: idx_notifications_recipient and idx_notifications_unread
+   - Modified clients table activity_type CHECK constraint:
+     * FROM: CHECK(activity_type IN('Wedding hall','Cafe','Club','Restaurant'))
+     * TO: CHECK(length(trim(activity_type)) > 0)
+   - Modified pricing table - changed price_per_kg for ('Canz', 'Cafe') from 15 to 12.5
+
+3. NEW ENDPOINTS ADDED:
+   - GET /api/notifications (in src/routes/admin.ts)
+     * Retrieves notifications for the current authenticated user
+     * Returns unread notifications by default, can filter by read status
+
+4. KNOWN LIMITATIONS:
+   - Custom business types selected during registration (via "Other" option) will not have pricing entries in the pricing table
+   - Users with custom business types cannot create baskets (water or otherwise) because the pricing table is constrained to standard business types only
+   - This limitation is consistent with the original design where only predefined business types have defined pricing
+   - The water visibility feature (Phase 4) only affects Canz material requests - all other materials follow standard pricing rules
+   - When "Other" is selected, the custom business type is stored directly in activity_type but pricing lookups will fail due to pricing table constraints
+
+5. ASSUMPTIONS MADE DURING IMPLEMENTATION:
+   - The "water price" refers to the effective price for 2kg of Canz material from Cafes (15 × 2 = 30 → 12.5 × 2 = 25)
+   - The frontend interprets HTTP 200 responses with {available: false, message: "Soon"} to show "Soon" UI state
+   - Existing authentication middleware properly populates JWT payload with userId and user_role
+   - Database connection is properly configured in the binding (c.env.canzo)
+   - The application can handle the additional table and indexes
+   - Existing notification APIs are not required - direct database insertion is sufficient
+   - Admin users are stored in users table with user_role = 'Admin'
+   - Multiple admin users are allowed and each should receive notifications
+   - recipient_id = 0 is invalid due to foreign key constraint - proper user IDs must be used
+
+6. POTENTIAL FOLLOW-UP WORK NOT INCLUDED IN REQUESTED TASKS:
+   - Add pricing entries for custom business types to enable basket creation (non-standard) business types to use the system
+   - Implement a mechanism for administrators to manage custom business type pricing
+   - Extend water visibility logic to consider custom business types (if they should have access to water)
+   - Add pagination to the GET /notifications endpoint for better performance with many notifications
+   - Add ability to mark notifications as read via API
+   - Implement real-time notification delivery (WebSockets) instead of polling
+   - Add notification templates/configuration system for easier message customization
+   - Add notification preferences (which types of notifications users want to receive)
+   - Implement notification expiration/cleanup mechanism
+   - Add unit tests for the new validation logic and endpoint behaviors
+   - Add API documentation for the new endpoints
+   - Implement rate limiting on authentication endpoints to prevent abuse
+   - Add input sanitization for custom business type to prevent potential injection issues
