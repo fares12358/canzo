@@ -71,6 +71,7 @@ const authRouter = new Hono<{Bindings:Bindings}>()
     return c.json({error:"Internal server error"},500)
         }
     }).post("/login",zValidator("json",loginSchema,(result,c)=>{
+        
         if(!result.success){
             return c.json({error:result.error.issues[0].message},400)
         }
