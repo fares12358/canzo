@@ -9,8 +9,9 @@ import googleRouter from "./routes/google"
 import { clientWithdrawRouter, adminWithdrawRouter } from "./routes/withdrawal"
 import {prettyJSON} from "hono/pretty-json"
 import verifyRole from "./middlewares/verifyRole"
+import deviceTokenRouter  from "./routes/deviceToken"
 type Bindings = {
-    JWT_SECRET: string
+    JWT_SECRET: string; 
 }
 
 const app = new Hono<{Bindings:Bindings}>()
@@ -25,8 +26,7 @@ app.use("/api/*",(c,next)=>{
   return jwtMiddleware(c, next)
 })
 app.use("/api/client/*",verifyRole("Client"))
-//app.use("/api/admin/*",verifyRole("Admin"))
-
+app.use("/api/admin/*",verifyRole("Admin"))
 app.route("/api/admin/", adminRouter)
 app.route("/api/admin/", profileRouter)
 app.route("/auth/", authRouter)
@@ -36,5 +36,6 @@ app.route("/api/client/", clientWithdrawRouter)
 app.route("/api/client/", profileRouter)
 app.route("/api/admin/", adminWithdrawRouter)
 app.route("/",imageRouter)
+app.route("/api/", deviceTokenRouter)
 
 export default app

@@ -4,25 +4,25 @@ export const walletTypeEnum = z.enum(
     ['Vodafone Cash', 'Orange Cash', 'Etisalat Cash', 'InstaPay'],
     {
         message:
-            'wallet_type must be one of: Vodafone Cash, Orange Cash, Etisalat Cash, InstaPay',
+            'نوع المحفظة يجب ان يكون أحد الخيارات التالية: Vodafone Cash, Orange Cash, Etisalat Cash, InstaPay',
     }
 )
 
 const withdrawSchema = z.object({
     amount: z
-        .number({ error: 'amount is required' })
-        .positive('amount must be greater than zero')
-        .max(1_000_000, 'amount exceeds maximum allowed'),
+        .number({ error: 'المبلغ مطلوب' })
+        .positive('المبلغ يجب أن يكون أكبر من الصفر')
+        .max(1_000_000, 'المبلغ تجاوز الحد المسموح به'),
     wallet_number: z
-        .string({ error: 'wallet_number is required' })
-        .min(5, 'wallet_number must be at least 5 characters')
-        .max(50, 'wallet_number must be at most 50 characters'),
+        .string({ error: 'رقم المحفظة مطلوب' })
+        .min(5, 'رقم المحفظة يجب أن يحتوي على 5 خانات على الأقل')
+        .max(50, 'رقم المحفظة يجب ألا يتجاوز 50 خانة'),
     wallet_type: walletTypeEnum,
 })
 
 const adminWithdrawStatusSchema = z.object({
     status: z.enum(['Approved', 'Rejected'], {
-        message: 'status must be Approved or Rejected',
+        message:     ' حالة الطلب يجب ان تكون  Approved أو Rejected',
     }),
 })
 

@@ -36,7 +36,7 @@ FINAL PROJECT VERIFICATION REPORT
    - The "water price" refers to the effective price for 2kg of Canz material from Cafes (15 × 2 = 30 → 12.5 × 2 = 25)
    - The frontend interprets HTTP 200 responses with {available: false, message: "Soon"} to show "Soon" UI state
    - Existing authentication middleware properly populates JWT payload with userId and user_role
-   - Database connection is properly configured in the binding (c.env.canzo)
+   - Database connection is properly configured in the binding (c.env.DB)
    - The application can handle the additional table and indexes
    - Existing notification APIs are not required - direct database insertion is sufficient
    - Admin users are stored in users table with user_role = 'Admin'

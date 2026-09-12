@@ -112,7 +112,7 @@ CREATE TABLE IF NOT EXISTS sold (
 CREATE TABLE IF NOT EXISTS pricing (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     material TEXT NOT NULL CHECK (material IN ('Plastic', 'Canz')),
-    activity_type TEXT NOT NULL CHECK (activity_type IN ('Wedding hall', 'Cafe', 'Club', 'Restaurant')),
+    activity_type TEXT NOT NULL CHECK (activity_type IN ('Wedding hall', 'Cafe', 'Club', 'Restaurant' , 'Other')),
     price_per_kg REAL NOT NULL,
     UNIQUE (material, activity_type)
 );

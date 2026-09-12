@@ -4,7 +4,7 @@ import { zValidator } from "@hono/zod-validator";
 import { setupProfileSchema,googleLoginSchema } from "../validation/google";
 type Bindings = {
     GOOGLE_CLIENT_ID: string;
-    canzo: D1Database
+    DB: D1Database
     JWT_SECRET: string
 }
 type User = {
@@ -36,27 +36,27 @@ googleRouter.post("/setup-profile",
 }
         const {userId} = c.get("jwtPayload") as TokenPayload
         const {address,activityType,activityName,phoneNumber} = c.req.valid("json")
-        const user = await c.env.canzo.prepare("SELECT phone_number FROM users WHERE id = ?1").bind(userId).first<User>();
-        const checkPhoneNumber = await c.env.canzo.prepare("SELECT * FROM users WHERE phone_number = ?1").bind(phoneNumber).first<User>();
+        const user = await c.env.DB.prepare("SELECT phone_number FROM users WHERE id = ?1").bind(userId).first<User>();
+        const checkPhoneNumber = await c.env.DB.prepare("SELECT * FROM users WHERE phone_number = ?1").bind(phoneNumber).first<User>();
         if(user?.phone_number !== null){
-            return c.json({error:"profile was already setup"},400)
+            return c.json({error:"تم إعداد الملف الشخصي من قبل"},400)
         }
         if(checkPhoneNumber){
-            return c.json({error:"phone number already exists"},400)
+            return c.json({error:"رقم الهاتف مسجل بالفعل"},400)
         }
-        const client = await c.env.canzo.prepare("SELECT user_id FROM clients WHERE user_id = ?1").bind(userId).first<Client>();
+        const client = await c.env.DB.prepare("SELECT user_id FROM clients WHERE user_id = ?1").bind(userId).first<Client>();
         if(client?.user_id !== null){
-            return c.json({error:"client already exists"},400)
+            return c.json({error:"العميل موجود بالفعل"},400)
         }
-        await c.env.canzo.batch([
-            c.env.canzo.prepare("UPDATE users SET phone_number = ?1 WHERE id = ?2").bind(phoneNumber,userId),
-            c.env.canzo.prepare("INSERT INTO clients (user_id,address,activity_type,activity_name) VALUES (?, ?, ?,?)")
+        await c.env.DB.batch([
+            c.env.DB.prepare("UPDATE users SET phone_number = ?1 WHERE id = ?2").bind(phoneNumber,userId),
+            c.env.DB.prepare("INSERT INTO clients (user_id,address,activity_type,activity_name) VALUES (?, ?, ?,?)")
             .bind(userId,address,activityType,activityName)
         ]);
-        return c.json({message:"Profile setup successful"})
+        return c.json({message:"تم إعداد الملف الشخصي بنجاح"})
     } catch (error) {
         console.error(`error while setting up profile ${error}`)
-        return c.json({error:"Internal server error"},500)
+        throw error
     }
 });
 export default googleRouter;

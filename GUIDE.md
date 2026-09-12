@@ -26,7 +26,7 @@
   GET    /stats                    - Get overall stats (client count, completed orders, total revenue)
 
 /image
-  GET    /image/:key               - Serve image from R2 bucket
+  GET    /image/:key               - Serve image from cloudinary
 
 /profile (protected, Client & Admin)
   GET    /profile                  - Get client profile

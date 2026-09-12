@@ -1,4 +1,6 @@
 import { createMiddleware } from 'hono/factory'
+import { AppError } from './errorHandler'
+
 
 type TokenPayload = {
   userId: number
@@ -16,9 +18,9 @@ type Variables = {
 export const verifyRole = (role: string) =>
   createMiddleware<{ Bindings: Bindings; Variables: Variables }>(async (c, next) => {
     const { user_role } = c.get('jwtPayload') as TokenPayload
-console.log(user_role)
+    console.log(user_role)
     if (user_role !== role) {
-      return c.json({ error: 'Forbidden' }, 403)
+      throw new AppError('FORBIDDEN', 'ليس لديك صلاحية لتنفيذ هذا الإجراء', 403)
     }
 
     await next()

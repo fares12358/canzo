@@ -13,6 +13,7 @@
     "@tsndr/cloudflare-worker-jwt": "^3.2.1",
     "@types/jsonwebtoken": "^9.0.10",
     "bcryptjs": "^3.0.3",
+    "firebase-admin": "^14.4.0",
     "hono": "^4.12.18",
     "jsonwebtoken": "^9.0.3",
     "resend": "^6.12.3",
